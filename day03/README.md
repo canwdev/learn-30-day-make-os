@@ -1,0 +1,1 @@
+制作真正的ipl读盘程序 `ipl.nas`（可以理解为Bootloader），加载 `haribote.sys` 内容，输出一个黑屏画面
