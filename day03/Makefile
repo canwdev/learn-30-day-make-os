@@ -1,49 +1,84 @@
 # 变量
-TOOLPATH = ..\z_tools
+TOOLPATH = ../z_tools/
+INCPATH  = ../z_tools/haribote/
 
+MAKE     = $(TOOLPATH)make.exe -r
+NASK     = $(TOOLPATH)nask.exe
+CC1      = $(TOOLPATH)cc1.exe -I$(INCPATH) -Os -Wall -quiet
+GAS2NASK = $(TOOLPATH)gas2nask.exe -a
+OBJ2BIM  = $(TOOLPATH)obj2bim.exe
+BIM2HRB  = $(TOOLPATH)bim2hrb.exe
+RULEFILE = $(TOOLPATH)haribote/haribote.rul
+EDIMG    = $(TOOLPATH)edimg.exe
+IMGTOL   = $(TOOLPATH)imgtol.com
 
 # 默认行为~
 
 default :
-	$(TOOLPATH)\make.exe img
+	$(MAKE) img
 
 # 文件生成规则
 
-ipl.bin : ipl.nas Makefile
-	$(TOOLPATH)\nask.exe ipl.nas ipl.bin ipl.lst
+ipl10.bin : ipl10.nas Makefile
+	$(NASK) ipl10.nas ipl10.bin ipl10.lst
 
-haribote.sys : haribote.nas Makefile
-	$(TOOLPATH)\nask.exe haribote.nas haribote.sys haribote.lst
+asmhead.bin : asmhead.nas Makefile
+	$(NASK) asmhead.nas asmhead.bin asmhead.lst
 
-haribote.img : ipl.bin haribote.sys Makefile
-	$(TOOLPATH)\edimg.exe  imgin:../z_tools/fdimg0at.tek \
-		wbinimg src:ipl.bin len:512 from:0 to:0 \
+bootpack.gas : bootpack.c Makefile
+	$(CC1) -o bootpack.gas bootpack.c
+
+bootpack.nas : bootpack.gas Makefile
+	$(GAS2NASK) bootpack.gas bootpack.nas
+
+bootpack.obj : bootpack.nas Makefile
+	$(NASK) bootpack.nas bootpack.obj bootpack.lst
+
+naskfunc.obj : naskfunc.nas Makefile
+	$(NASK) naskfunc.nas naskfunc.obj naskfunc.lst
+
+bootpack.bim : bootpack.obj naskfunc.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map \
+		bootpack.obj naskfunc.obj
+# 3MB+64KB=3136KB
+
+bootpack.hrb : bootpack.bim Makefile
+	$(BIM2HRB) bootpack.bim bootpack.hrb 0
+
+haribote.sys : asmhead.bin bootpack.hrb Makefile
+	copy /B asmhead.bin+bootpack.hrb haribote.sys
+
+haribote.img : ipl10.bin haribote.sys Makefile
+	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
+		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:haribote.sys to:@: \
 		imgout:haribote.img
 
+
 # 指令
 
-asm :
-	$(TOOLPATH)\make.exe -r ipl.bin
-
 img :
-	$(TOOLPATH)\make.exe -r haribote.img
+	$(MAKE) haribote.img
 
 run :
-	$(TOOLPATH)\make.exe img
-	copy haribote.img $(TOOLPATH)\qemu\fdimage0.bin
-	$(TOOLPATH)\make.exe -C $(TOOLPATH)\qemu
+	$(MAKE) img
+	copy haribote.img ..\z_tools\qemu\fdimage0.bin
+	$(MAKE) -C ../z_tools/qemu
 
 install :
-	$(TOOLPATH)\make.exe img
-	$(TOOLPATH)\imgtol.com w a: haribote.img
+	$(MAKE) img
+	$(IMGTOL) w a: haribote.img
 
 clean :
-	-del ipl.bin
-	-del ipl.lst
+	-del *.bin
+	-del *.lst
+	-del *.gas
+	-del *.obj
+	-del bootpack.nas
+	-del bootpack.map
+	-del bootpack.bim
+	-del bootpack.hrb
 	-del haribote.sys
-	-del haribote.lst
-
 src_only :
-	$(TOOLPATH)\make.exe clean
+	$(MAKE) clean
 	-del haribote.img

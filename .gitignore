@@ -4,3 +4,8 @@ z_tools
 *.bin
 *.lst
 *.sys
+*.bim
+*.gas
+*.map
+*.obj
+*.hrb
