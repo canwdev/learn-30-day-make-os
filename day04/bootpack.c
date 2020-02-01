@@ -8,20 +8,41 @@ void io_store_eflags(int eflags);
 
 void init_palette(void);
 void set_palette(int start, int end, unsigned char *rgb);
+void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
+
+// 颜色值
+
+#define COL8_000000 0
+#define COL8_FF0000 1
+#define COL8_00FF00 2
+#define COL8_FFFF00 3
+#define COL8_0000FF 4
+#define COL8_FF00FF 5
+#define COL8_00FFFF 6
+#define COL8_FFFFFF 7
+#define COL8_C6C6C6 8
+#define COL8_840000 9
+#define COL8_008400 10
+#define COL8_848400 11
+#define COL8_000084 12
+#define COL8_840084 13
+#define COL8_008484 14
+#define COL8_848484 15
 
 void HariMain(void)
 {
-  int i;   // 变量声明，i是一个32位整数
-  char *p; // 变量p，用于BYTE型地址
+  int i;
+  char *vram;
+  int xsize, ysize;
 
   init_palette(); // 初始化调色板
 
-  p = (char *)0xa0000;
+  vram = (char *)0xa0000;
+  xsize = 320;
 
-  for (i = 0; i <= 0xffff; i++)
-  {
-    *(p + i) = i & 0x0f;
-  }
+  boxfill8(vram, xsize, COL8_FF0000,  20,  20, 120, 120);
+	boxfill8(vram, xsize, COL8_00FF00,  70,  50, 170, 150);
+	boxfill8(vram, xsize, COL8_0000FF, 120,  80, 220, 180);
 
   for (;;)
   {
@@ -58,9 +79,9 @@ void init_palette(void)
 void set_palette(int start, int end, unsigned char *rgb)
 {
   int i, eflags;
-  eflags = io_load_eflags();    // 记录中断许可标志的值
-  io_cli();                     // 将中断许可标志置为0，禁止中断
-  io_out8(0x03c8, start);       // 开始写入调色板数据
+  eflags = io_load_eflags(); // 记录中断许可标志的值
+  io_cli();                  // 将中断许可标志置为0，禁止中断
+  io_out8(0x03c8, start);    // 开始写入调色板数据
 
   for (i = start; i <= end; i++)
   {
@@ -69,6 +90,29 @@ void set_palette(int start, int end, unsigned char *rgb)
     io_out8(0x03c9, rgb[2] / 4);
     rgb += 3;
   }
-  io_store_eflags(eflags);      // 恢复许可标志的值
+  io_store_eflags(eflags); // 恢复许可标志的值
+  return;
+}
+
+/**
+ * 绘制矩形
+ * varm 显存地址
+ * xsize 屏幕宽度（用于计算y值）
+ * c 颜色代码
+ * x0 x轴绘制起点
+ * y0 y轴绘制起点
+ * x1 x轴绘制终点
+ * y1 y轴绘制终点
+ */
+void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1)
+{
+  int x, y;
+  for (y = y0; y <= y1; y++)
+  {
+    for (x = x0; x <= x1; x++)
+    {
+      *(vram + (y * xsize + x)) = c;
+    }
+  }
   return;
 }
