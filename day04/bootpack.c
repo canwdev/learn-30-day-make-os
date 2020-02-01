@@ -39,10 +39,29 @@ void HariMain(void)
 
   vram = (char *)0xa0000;
   xsize = 320;
+  ysize = 200;
 
-  boxfill8(vram, xsize, COL8_FF0000,  20,  20, 120, 120);
-	boxfill8(vram, xsize, COL8_00FF00,  70,  50, 170, 150);
-	boxfill8(vram, xsize, COL8_0000FF, 120,  80, 220, 180);
+
+  // 绘制任务栏
+  int barHeight = 30;
+  boxfill8(vram, xsize, COL8_008484, 0, 0, xsize - 1, ysize - barHeight);
+  boxfill8(vram, xsize, COL8_C6C6C6, 0, ysize - barHeight + 1, xsize - 1, ysize - barHeight + 1);
+  boxfill8(vram, xsize, COL8_FFFFFF, 0, ysize - barHeight + 2, xsize - 1, ysize - barHeight + 2);
+  boxfill8(vram, xsize, COL8_C6C6C6, 0, ysize - barHeight + 3, xsize - 1, ysize - 1);
+
+  // 开始按钮
+  int buttonWidth = 50;
+  boxfill8(vram, xsize, COL8_FFFFFF, 3, ysize - barHeight + 5, buttonWidth + 3, ysize - barHeight+5);
+  boxfill8(vram, xsize, COL8_FFFFFF, 2, ysize - barHeight + 5, 2, ysize - 4);
+  boxfill8(vram, xsize, COL8_848484, 3, ysize - 4, buttonWidth + 3, ysize - 4);
+  boxfill8(vram, xsize, COL8_848484, buttonWidth + 3, ysize - barHeight + 5, buttonWidth+3, ysize - 4);
+
+  // 通知区域
+  int statWidth = 50;
+  boxfill8(vram, xsize, COL8_848484, xsize - statWidth - 3, ysize - barHeight + 5, xsize - 3, ysize - barHeight+5);
+  boxfill8(vram, xsize, COL8_848484, xsize - statWidth - 4, ysize - barHeight + 5, xsize - statWidth - 4, ysize - 4);
+  boxfill8(vram, xsize, COL8_FFFFFF, xsize - statWidth - 3, ysize - 4, xsize - 3, ysize - 4);
+  boxfill8(vram, xsize, COL8_FFFFFF, xsize - 3, ysize - barHeight + 6, xsize - 3, ysize - 4);
 
   for (;;)
   {
