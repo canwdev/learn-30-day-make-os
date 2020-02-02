@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 // naskfunc.nas 里面的函数
 
 void io_hlt(void);
@@ -46,6 +48,7 @@ void HariMain(void)
 {
   struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
   extern char hankaku[4096];
+  char s[40];
 
   init_palette(); // 初始化调色板
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny); // 绘制背景
@@ -55,6 +58,10 @@ void HariMain(void)
   putfonts8_asc(binfo->vram, binfo->scrnx, 31, 31, COL8_000000, "Hello, world!");
   putfonts8_asc(binfo->vram, binfo->scrnx, 30, 30, COL8_FFFFFF, "Hello, world!");
 
+  sprintf(s, "scrnx = %d", binfo->scrnx);
+  putfonts8_asc(binfo->vram, binfo->scrnx, 16, 64, COL8_FFFFFF, s);
+
+  
   for (;;)
   {
     io_hlt();
