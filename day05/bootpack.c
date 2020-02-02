@@ -1,17 +1,20 @@
+// naskfunc.nas 里面的函数
+
 void io_hlt(void);
 void io_cli(void);
 void io_out8(int port, int data);
 int io_load_eflags(void);
 void io_store_eflags(int eflags);
 
-// 就算写在同一个源文件里，如果想在定义前使用，还是必须先声明一下。
+// 本文件函数声明
 
 void init_palette(void);
 void set_palette(int start, int end, unsigned char *rgb);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void init_screen(char *vram, int x, int y);
+void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
 
-// 颜色值
+// 颜色代码
 
 #define COL8_000000 0
 #define COL8_FF0000 1
@@ -40,10 +43,14 @@ struct BOOTINFO
 void HariMain(void)
 {
   struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
+  static char font_A[16] = {
+    0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
+    0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
+  };
 
   init_palette(); // 初始化调色板
-
-  init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
+  init_screen(binfo->vram, binfo->scrnx, binfo->scrny); // 绘制背景
+  putfont8(binfo->vram, binfo->scrnx, 10, 10, COL8_000000, font_A);
 
   for (;;)
   {
@@ -144,5 +151,25 @@ void init_screen(char *vram, int x, int y)
   boxfill8(vram, x, COL8_FFFFFF, x - statWidth - 3, y - 4, x - 3, y - 4);
   boxfill8(vram, x, COL8_FFFFFF, x - 3, y - barHeight + 6, x - 3, y - 4);
 
+  return;
+}
+
+void putfont8(char *vram, int xsize, int x, int y, char c, char *font)
+{
+  int i;
+  char *p, d /* data */;
+  for (i = 0; i < 16; i++)
+  {
+    p = vram + (y + i) * xsize + x;
+    d = font[i];
+    if ((d & 0x80) != 0) { p[0] = c; }
+    if ((d & 0x40) != 0) { p[1] = c; }
+    if ((d & 0x20) != 0) { p[2] = c; }
+    if ((d & 0x10) != 0) { p[3] = c; }
+    if ((d & 0x08) != 0) { p[4] = c; }
+    if ((d & 0x04) != 0) { p[5] = c; }
+    if ((d & 0x02) != 0) { p[6] = c; }
+    if ((d & 0x01) != 0) { p[7] = c; }
+  }
   return;
 }
