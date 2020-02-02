@@ -13,9 +13,11 @@ void io_store_eflags(int eflags);
 void init_palette(void);
 void set_palette(int start, int end, unsigned char *rgb);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
-void init_screen(char *vram, int x, int y);
+void init_screen8(char *vram, int x, int y);
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
 void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);
+void init_mouse_cursor8(char *mouse, char bc);
+void putblock8_8(char *vram, int vxsize, int pxsize, int pysize, int px0, int py0, char *buf, int bxsize);
 
 // 颜色代码
 
@@ -47,19 +49,22 @@ struct BOOTINFO
 void HariMain(void)
 {
   struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
-  extern char hankaku[4096];
-  char s[40];
+  char s[40], mcursor[252];
+  int mx, my;
 
   init_palette(); // 初始化调色板
-  init_screen(binfo->vram, binfo->scrnx, binfo->scrny); // 绘制背景
+  init_screen8(binfo->vram, binfo->scrnx, binfo->scrny); // 绘制背景
 
-  // 输出字符串
-  putfonts8_asc(binfo->vram, binfo->scrnx, 8, 8, COL8_FFFFFF, "CAN OS:");
-  putfonts8_asc(binfo->vram, binfo->scrnx, 31, 31, COL8_000000, "Hello, world!");
-  putfonts8_asc(binfo->vram, binfo->scrnx, 30, 30, COL8_FFFFFF, "Hello, world!");
+  // 显示鼠标指针
+  mx = (binfo->scrnx - 12) / 2; // 计算鼠标在画面中心的坐标
+  my = (binfo->scrny - 21) / 2;
 
-  sprintf(s, "scrnx = %d", binfo->scrnx);
-  putfonts8_asc(binfo->vram, binfo->scrnx, 16, 64, COL8_FFFFFF, s);
+  init_mouse_cursor8(mcursor, COL8_BG);
+  putblock8_8(binfo->vram, binfo->scrnx, 12, 21, mx, my, mcursor, 12);
+
+  // 输出debug信息
+  sprintf(s, "(%d, %d)", mx, my);
+  putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
 
   
   for (;;)
@@ -136,7 +141,7 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
   return;
 }
 
-void init_screen(char *vram, int x, int y)
+void init_screen8(char *vram, int x, int y)
 {
   // 绘制桌面背景
   int barHeight = 30;
@@ -192,6 +197,71 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
   {
     putfont8(vram, xsize, x, y, c, hankaku + *s * 16);
     x += 8;
+  }
+  return;
+}
+
+/**
+ * 初始化鼠标指针(21*12=252)
+ * */
+void init_mouse_cursor8(char *mouse, char bc)
+{
+  static char cursor[21][12] = {
+    "*...........",
+    "**..........",
+    "*0*.........",
+    "*00*........",
+    "*000*.......",
+    "*0000*......",
+    "*00000*.....",
+    "*000000*....",
+    "*0000000*...",
+    "*00000000*..",
+    "*000000000*.",
+    "*000000*****",
+    "*000*00*....",
+    "*00**00*....",
+    "*0*..*00*...",
+    "**...*00*...",
+    "*.....*00*..",
+    "......*00*..",
+    ".......*00*.",
+    ".......*00*.",
+    "........**..",
+  };
+
+  int x, y;
+
+  for (y = 0; y < 21; y++)
+  {
+    for (x = 0; x < 12; x++)
+    {
+      if (cursor[y][x] == '*')
+      {
+        mouse[y * 12 + x] = COL8_FFFFFF;
+      }
+      if (cursor[y][x] == '0')
+      {
+        mouse[y * 12 + x] = COL8_000000;
+      }
+      if (cursor[y][x] == '.')
+      {
+        mouse[y * 12 + x] = bc;
+      }
+    }
+  }
+  return;
+}
+
+void putblock8_8(char *vram, int vxsize, int pxsize, int pysize, int px0, int py0, char *buf, int bxsize)
+{
+  int x, y;
+  for (y = 0; y < pysize; y++)
+  {
+    for (x = 0; x < pxsize; x++)
+    {
+      vram[(py0 + y) * vxsize + (px0 + x)] = buf[y * bxsize + x];
+    }
   }
   return;
 }
