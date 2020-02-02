@@ -13,6 +13,7 @@ void set_palette(int start, int end, unsigned char *rgb);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void init_screen(char *vram, int x, int y);
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
+void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);
 
 // 颜色代码
 
@@ -32,6 +33,7 @@ void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
 #define COL8_840084 13
 #define COL8_008484 14
 #define COL8_848484 15
+#define COL8_BG 16
 
 struct BOOTINFO
 {
@@ -43,14 +45,15 @@ struct BOOTINFO
 void HariMain(void)
 {
   struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
-  static char font_A[16] = {
-    0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
-    0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
-  };
+  extern char hankaku[4096];
 
   init_palette(); // 初始化调色板
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny); // 绘制背景
-  putfont8(binfo->vram, binfo->scrnx, 10, 10, COL8_000000, font_A);
+
+  // 输出字符串
+  putfonts8_asc(binfo->vram, binfo->scrnx, 8, 8, COL8_FFFFFF, "CAN OS:");
+  putfonts8_asc(binfo->vram, binfo->scrnx, 31, 31, COL8_000000, "Hello, world!");
+  putfonts8_asc(binfo->vram, binfo->scrnx, 30, 30, COL8_FFFFFF, "Hello, world!");
 
   for (;;)
   {
@@ -60,7 +63,7 @@ void HariMain(void)
 
 void init_palette(void)
 {
-  static unsigned char table_rgb[16 * 3] = {
+  static unsigned char table_rgb[17 * 3] = {
       0x00, 0x00, 0x00, /*  0:黑 */
       0xff, 0x00, 0x00, /*  1:亮红 */
       0x00, 0xff, 0x00, /*  2:亮绿 */
@@ -76,9 +79,10 @@ void init_palette(void)
       0x00, 0x00, 0x84, /* 12:暗蓝 */
       0x84, 0x00, 0x84, /* 13:暗紫 */
       0x00, 0x84, 0x84, /* 14:浅暗蓝 */
-      0x84, 0x84, 0x84  /* 15:暗灰 */
+      0x84, 0x84, 0x84,  /* 15:暗灰 */
+      0x3f, 0x5e, 0xb5, /* 16:Material */
   };
-  set_palette(0, 15, table_rgb);
+  set_palette(0, 16, table_rgb);
   return;
 
   // C语言中的static char语句只能用于数据，相当于汇编中的DB指令
@@ -130,7 +134,7 @@ void init_screen(char *vram, int x, int y)
   // 绘制桌面背景
   int barHeight = 30;
 
-  boxfill8(vram, x, COL8_00FFFF, 0, 0, x - 1, y - barHeight);
+  boxfill8(vram, x, COL8_BG, 0, 0, x - 1, y - barHeight);
 
   // 绘制任务栏
   boxfill8(vram, x, COL8_C6C6C6, 0, y - barHeight + 1, x - 1, y - barHeight + 1);
@@ -170,6 +174,17 @@ void putfont8(char *vram, int xsize, int x, int y, char c, char *font)
     if ((d & 0x04) != 0) { p[5] = c; }
     if ((d & 0x02) != 0) { p[6] = c; }
     if ((d & 0x01) != 0) { p[7] = c; }
+  }
+  return;
+}
+
+void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s)
+{
+  extern char hankaku[4096];
+  for (; *s != 0x00; s++) // 遍历字符串（字符串以 0x00 结尾）
+  {
+    putfont8(vram, xsize, x, y, c, hankaku + *s * 16);
+    x += 8;
   }
   return;
 }
