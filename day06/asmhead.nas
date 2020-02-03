@@ -5,7 +5,7 @@ DSKCAC	EQU		0x00100000		; 磁盘缓存位置
 DSKCAC0	EQU		0x00008000		; 磁盘缓存位置（实模式）
 
 ; BOOT_INFO 相关信息
-CYLS EQU 0xff0        ; 设定启动区
+CYLS EQU 0x0ff0        ; 设定启动区
 LEDS EQU 0x0ff1
 VMODE EQU 0x0ff2			; 关于颜色数目的信息，颜色的位数
 SCRNX EQU 0x0ff4			; 分辨率的X（screen x）
