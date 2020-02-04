@@ -81,7 +81,6 @@ install :
 clean :
 	-del *.bin
 	-del *.lst
-	-del *.gas
 	-del *.obj
 	-del bootpack.map
 	-del bootpack.bim
