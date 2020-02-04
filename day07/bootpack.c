@@ -1,18 +1,19 @@
 #include "bootpack.h"
 #include <stdio.h>
 
-extern struct KEYBUF keybuf;
+extern struct FIFO8 keyfifo;
 
 void HariMain(void)
 {
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
-  char s[40], mcursor[252];
-  int mx, my, i, j;
+  char s[40], mcursor[252], keybuf[32];
+  int mx, my, i;
 
   init_gdtidt();
   init_pic();
   io_sti(); /* IDT/PIC的初始化已经完成，于是开放CPU的中断 */
 
+  fifo8_init(&keyfifo, 32, keybuf);
 	io_out8(PIC0_IMR, 0xf9); /* 开放PIC1和键盘中断(11111001) */
 	io_out8(PIC1_IMR, 0xef); /* 开放鼠标中断(11101111) */
 
@@ -34,22 +35,16 @@ void HariMain(void)
   {
     io_cli(); // 屏蔽中断
 
-    if (keybuf.len == 0)
-    {
+    if (fifo8_status(&keyfifo) == 0) {
       io_stihlt();
-    }
-    else
+    } else
     {
-      i = keybuf.data[keybuf.next_r];
-      keybuf.len--;
-      keybuf.next_r++;
-      if (keybuf.next_r == 32) {
-        keybuf.next_r = 0;
-      }
-      io_sti(); // 开放中断
+      i = fifo8_get(&keyfifo);
+      io_sti();
       sprintf(s, "%02X", i);
       boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 0, 16, 15, 31);
       putfonts8_asc(binfo->vram, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
     }
+    
   }
 }
