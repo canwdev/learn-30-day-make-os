@@ -131,11 +131,11 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
 }
 
 /**
- * 初始化鼠标指针(21*12=252)
+ * 初始化鼠标指针(CURSOR_HEIGHT*CURSOR_WIDTH)
  * */
 void init_mouse_cursor8(char *mouse, char bc)
 {
-  static char cursor[21][12] = {
+  static char cursor[CURSOR_HEIGHT][CURSOR_WIDTH] = {
     "*...........",
     "**..........",
     "*0*.........",
@@ -161,21 +161,21 @@ void init_mouse_cursor8(char *mouse, char bc)
 
   int x, y;
 
-  for (y = 0; y < 21; y++)
+  for (y = 0; y < CURSOR_HEIGHT; y++)
   {
-    for (x = 0; x < 12; x++)
+    for (x = 0; x < CURSOR_WIDTH; x++)
     {
       if (cursor[y][x] == '*')
       {
-        mouse[y * 12 + x] = COL8_FFFFFF;
+        mouse[y * CURSOR_WIDTH + x] = COL8_FFFFFF;
       }
       if (cursor[y][x] == '0')
       {
-        mouse[y * 12 + x] = COL8_000000;
+        mouse[y * CURSOR_WIDTH + x] = COL8_000000;
       }
       if (cursor[y][x] == '.')
       {
-        mouse[y * 12 + x] = bc;
+        mouse[y * CURSOR_WIDTH + x] = bc;
       }
     }
   }

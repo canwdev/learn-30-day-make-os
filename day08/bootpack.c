@@ -35,11 +35,11 @@ void HariMain(void)
   init_screen8(binfo->vram, binfo->scrnx, binfo->scrny); // 绘制背景
 
   // 显示鼠标指针
-  mx = (binfo->scrnx - 12) / 2; // 计算鼠标在画面中心的坐标
-  my = (binfo->scrny - 21) / 2;
+  mx = (binfo->scrnx - CURSOR_WIDTH) / 2; // 计算鼠标在画面中心的坐标
+  my = (binfo->scrny - CURSOR_HEIGHT) / 2;
 
   init_mouse_cursor8(mcursor, COL8_BG);
-  putblock8_8(binfo->vram, binfo->scrnx, 12, 21, mx, my, mcursor, 12);
+  putblock8_8(binfo->vram, binfo->scrnx, CURSOR_WIDTH, CURSOR_HEIGHT, mx, my, mcursor, CURSOR_WIDTH);
 
   // 输出debug信息
   sprintf(s, "(%d, %d)", mx, my);
@@ -92,7 +92,31 @@ void HariMain(void)
           putfonts8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
         } 
 
+        boxfill8(binfo->vram, binfo->scrnx, COL8_BG, mx, my, mx+CURSOR_WIDTH, my+CURSOR_HEIGHT); // 清除原来的鼠标
+        mx += mdec.x; // 获得绝对坐标
+        my += mdec.y;
+        if (mx < 0) {
+          mx = 0;
+        }
+        if (my < 0) {
+          my = 0;
+        }
+        if (mx > binfo->scrnx - CURSOR_WIDTH)
+        {
+          mx = binfo->scrnx - CURSOR_WIDTH;
+        }
+        if (my > binfo->scrny -  CURSOR_HEIGHT)
+        {
+          my = binfo->scrny - CURSOR_HEIGHT;
+        }
         
+        // 输出绝对坐标
+        sprintf(s, "(%3d, %3d)", mx, my);
+        boxfill8(binfo->vram, binfo->scrnx, COL8_BG, 0, 0, 79, 15);
+        putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
+
+        // 描画鼠标
+        putblock8_8(binfo->vram, binfo->scrnx, CURSOR_WIDTH, CURSOR_HEIGHT, mx, my, mcursor, CURSOR_WIDTH);
       }
     }
   }

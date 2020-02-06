@@ -66,6 +66,9 @@ void putblock8_8(char *vram, int vxsize, int pxsize, int pysize, int px0, int py
 #define COL8_848484 15
 #define COL8_BG 16
 
+// 鼠标cursor宽高
+#define CURSOR_WIDTH 12
+#define CURSOR_HEIGHT 21
 
 // dsctbl.c
 struct SEGMENT_DESCRIPTOR {
